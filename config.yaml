@@ -101,6 +101,8 @@ moon_coupled:                  # sim/scenarios/moon_coupled.py: the Moon as a fu
   years: 3                     # each window
   dt_hours: 0.5
   settle_days: 30              # the controller's start-up wobble is not counted
+  frame_hours: 6               # viewer frames: one every 6 hours ...
+  frame_days: 120              # ... for the first 120 days of each window (about four lunar months)
   epochs_au: [1.0, middle, 2.7]   # 1.0 starts from the real J2000 Earth and Moon; others put the Earth-Moon pair
                                # on a circular orbit at that size with the Moon's real J2000 offset; middle = run.json
 

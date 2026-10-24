@@ -45,6 +45,7 @@ def test_moon_beside_the_live_tow_short_window():
     assert e["checks"]["moon_stays_bound"] and e["checks"]["moon_distance_change_within_limit"]
     assert e["checks"]["asteroid_on_spot"] and e["checks"]["beam_misses_the_moon"]
     assert e["beam_peak_increase_from_moon"] > 0.05      # the Moon's pull on the asteroid is real and costs power
+    assert e["frames"] and len(e["frames"][0]) == len(e["frame_columns"])   # viewer frames of the live Moon
 
 
 @pytest.mark.slow

@@ -5,8 +5,8 @@
 > its branch (§7), then update §5 (state), §6 (tick the box), §8 (renditions, if visual) and append to
 > §10 (prompt log). Keep entries short; link to files instead of copying them.
 >
-> Last updated: **2026-10-24 18:05 IST** (prompt P7). Repo: `~/Desktop/pipeline/black-ant`
-> (GitHub `Ashish000011/black-ant`). Viewer engine: OpenSpace, source at `~/Desktop/pipeline/OpenSpace-source`.
+> Last updated: **2026-10-24 19:00 IST** (prompt P9). Repo: `~/Desktop/pipeline/black-ant`
+> (team repo `origin` = `Ashish000011/black-ant`; contributors' copy `mine` = `madhukarverma/black-ant`, default branch `develop`). Viewer engine: OpenSpace, source at `~/Desktop/pipeline/OpenSpace-source`.
 
 ---
 
@@ -233,5 +233,9 @@ external / unresolved-partner / no-partner / internal. Mirror these in F7–F9.
 | P6 | 24 Oct 17:40 | Where is the GUI like the Vercel sample? → Build the web app first, basics only, little animation. | Built the test bench web app (F8/F9 basics); run `uv run python -m app.server`, open http://localhost:8765. Redesigned in P7. Mars fix decision still pending. |
 
 | P7 | 24 Oct 17:49 | Make the app less like the Vercel sample, more like a structured application. (Git: Moon commit was already made; the app commit `155c371` landed on `m1/moon-coupled` because `git switch m4/...` failed on README.) | Redesigned as "Black Ant Workbench": navigation rail (Overview, Experiments, Runs, Validation, Moon and baseline, Compare runs), hash routes, run pages with tabs (Trajectory, Orbit, Forces and ledger, Earth safety, Export), winning-conditions table with sources, grouped experiment forms, job progress bar + log, light and dark themes, dark scope viewer. Server sends Infinity/NaN as null. Git fix: move `155c371` to `m4/dashboard-and-export` (see P7 reply). |
+
+| P8 | 24 Oct 18:05 | Put the project on GitHub under `madhukarverma` with full history, for other contributors. | Gave commands: commit the never-committed OpenSpace adapter on `3d-visualization`, commit context files on `m4/dashboard-and-export`, make `develop` = everything merged, add remote `mine` = `github.com/madhukarverma/black-ant`, push all branches; set `develop` as default; update CODEOWNERS; set own git name/email (repo config says Ashish). Team repo stays `origin`. |
+
+| P9 | 24 Oct 18:46 | Move the run page's top facts bar into a right sidebar; make the Moon visible, since outside the close-up you cannot see it. | Run page: tabs + content on the left, sticky right sidebar (Outcome, Run settings incl. tow asteroids, Files). Viewer has three views: Solar system (Moon drawn on its mean orbit around Earth at enlarged distance, factor shown), Earth close-up (Moon on mean orbit), **Earth and Moon, live** (plays the simulated Moon from `moon_coupled`: Moon + last month's path, asteroid, light in/bounced, keep-out, Sun direction; epoch selector; day slider). `moon_coupled.py` now saves viewer frames (every 6 h for the first 120 days; config `frame_hours`, `frame_days`). Honest labelling: the journey folds the Moon into Earth. |
 
 <!-- Append new prompts above this line: ID, date, one-line request, outcome + files. -->

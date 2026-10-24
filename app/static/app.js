@@ -1,7 +1,7 @@
 // Black Ant Workbench. Reads what the Python core saved; computes no physics of its own.
 "use strict";
 const AU_KM = 149597870.7;
-const R_KM = { sun: 695700, earth: 6371, mars: 3389.5, jupiter: 69911, asteroid: 335 };
+const R_KM = { sun: 695700, earth: 6371, mars: 3389.5, jupiter: 69911, asteroid: 335, moon: 1737.4 };
 const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const $ = (s, el = document) => el.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -77,6 +77,36 @@ function table(head, rows, numCols = []) {
 function wireRowLinks(el) { el.querySelectorAll("tr[data-href]").forEach(tr => tr.onclick = () => (location.hash = tr.dataset.href)); }
 function facts(items) { return `<dl class="facts">${items.map(([k, v, s]) => `<div><dt>${k}</dt><dd>${v}${s ? `<small>${s}</small>` : ""}</dd></div>`).join("")}</dl>`; }
 const empty = (title, text, action = "") => `<div class="empty"><strong>${title}</strong>${text}${action ? `<p>${action}</p>` : ""}</div>`;
+
+function runSide(path, s) {
+  const a = s.tows["earth-tow"]?.arrival, m = s.tows["mars-tow"]?.arrival, st = s.settings;
+  const row = (k, v, sub = "") => `<div><dt>${k}</dt><dd>${v}${sub ? `<small>${sub}</small>` : ""}</dd></div>`;
+  const tows = (st.tows || []).map(t => row(t.name === "earth-tow" ? "Earth tow asteroid" : "Mars tow asteroid", `${sci(t.asteroid_mass_kg)} kg`,
+    `${Math.round(t.distance_km).toLocaleString("en-US")} km from its planet, stops at ${t.stop_au} AU`)).join("");
+  return `<aside class="runside">
+    <section class="sheet"><header><div><h2>Outcome</h2></div></header><dl class="sidefacts">
+      ${row("Earth arrives", a ? year(a.year) : "Not yet", a ? `${a.a_au} AU, eccentricity ${a.eccentricity}` : `ends at ${fix(s.end?.earth?.a_au, 3)} AU`)}
+      ${row("Mars", m ? "Parked" : "Not parked", m ? `${year(m.year)}, ${m.a_au} AU, eccentricity ${m.eccentricity}` : `ends at ${fix(s.end?.mars?.a_au, 2)} AU, eccentricity ${fix(s.end?.mars?.eccentricity, 2)}`)}
+      ${row("Closest Earth–Mars", `${s.mars_closest.au} AU`, year(s.mars_closest.year))}
+      ${row("Unresolved flags", s.flags.unresolved ? state(false, String(s.flags.unresolved)) : state(true, "0"), `${s.flags.covered_by_enablers} covered by enablers`)}
+      ${row("Peak beam power", `${sci(s.total_beam_max_w)} W`, `limit ${sci(st.beam_limit_w)} W (enabler E1)`)}
+    </dl></section>
+    <section class="sheet"><header><div><h2>Run settings</h2></div></header><dl class="sidefacts">
+      ${row("Simulated years asked", Number(st.years).toLocaleString("en-US"))}
+      ${row("Step", `${st.dt_days} day${st.dt_days === 1 ? "" : "s"}`)}
+      ${row("Starting orbits", st.start_orbits === "real" ? "Real J2000 orbits" : "Flat circles")}
+      ${row("Mars moved first", st.mars_tow ? "Yes" : "No")}
+      ${row("Bodies", String(st.bodies?.length ?? "—"), "Earth carries the Moon's mass")}
+      ${tows}
+      ${row("Run time", `${Math.round(s.run_seconds)} s`)}
+    </dl></section>
+    <section class="sheet"><header><div><h2>Files</h2></div></header><div class="body sidelinks">
+      <a href="/api/export.csv?path=${encodeURIComponent(path)}">Frames as CSV</a>
+      <a href="/api/file?path=${encodeURIComponent(path + "/summary.json")}" target="_blank">summary.json</a>
+      <span class="help">${esc(path)}</span>
+    </div></section>
+  </aside>`;
+}
 
 function runFacts(s) {
   const a = s.tows["earth-tow"]?.arrival, m = s.tows["mars-tow"]?.arrival;
@@ -225,9 +255,9 @@ const RUN_TABS = [["trajectory", "Trajectory"], ["orbit", "Orbit"], ["ledger", "
 async function pageRun(main, [encPath, tab = "trajectory"]) {
   const path = decodeURIComponent(encPath || "");
   const run = await runData(path), s = run.summary, F = run.frames;
-  main.innerHTML = `<section class="sheet">${runFacts(s)}</section>
+  main.innerHTML = `<div class="runlayout"><div class="runmain">
     <nav class="tabs" aria-label="Run views">${RUN_TABS.map(([k, l]) => `<a href="${runHref(path, k)}" ${k === tab ? 'aria-current="page"' : ""}>${l}</a>`).join("")}</nav>
-    <div id="tabbody"></div>`;
+    <div id="tabbody"></div></div>${runSide(path, s)}</div>`;
   const body = $("#tabbody");
   if (tab === "trajectory") return mountScope(body, run);
   if (tab === "orbit") {
@@ -274,85 +304,154 @@ async function pageRun(main, [encPath, tab = "trajectory"]) {
 }
 
 /* ---------- scope (trajectory viewer) ---------- */
-function mountScope(body, run) {
+// Three views. "solar" and "earth" play the journey's saved frames (one per 10 years; the journey folds the Moon into
+// Earth, so the Moon is drawn on its mean orbit and labelled as such). "moon" plays the live Moon from the
+// "Moon beside the tow" run, where the Moon is a full body (one frame every 6 hours).
+const MOON_KM = 384400, MONTH_D = 27.321661, MOON_L0 = Math.atan2(-1.838126e-3, -1.949282e-3); // J2000 geocentric longitude (Horizons)
+async function mountScope(body, run) {
   const F = run.frames;
-  const v = { i: F.length - 1, view: store.get("view", "solar"), scale: store.get("scale", "enlarged"), yaw: 0, pitch: Math.PI / 2, zoom: 1, playing: false };
-  body.innerHTML = `<section class="sheet"><header><div><h2>Trajectory</h2><p>Saved frames, one per 10 simulated years. Drag to turn, scroll to zoom.</p></div>
+  let live = await latest("moon_coupled.json");
+  if (!live?.epochs?.[0]?.frames?.length) live = null; // older runs saved no frames: run "Moon beside the tow" again
+  const v = { i: F.length - 1, j: 0, epoch: 0, view: store.get("view", "solar"), scale: store.get("scale", "enlarged"), yaw: 0, pitch: Math.PI / 2, zoom: 1, playing: false };
+  if (v.view === "moon" && !live) v.view = "solar";
+  body.innerHTML = `<section class="sheet"><header><div><h2>Trajectory</h2><p id="scopesub"></p></div>
       <div class="actions">
-        <div class="seg" role="group" aria-label="View"><button data-view="solar">Solar system</button><button data-view="earth">Earth close-up</button></div>
-        <div class="seg" role="group" aria-label="Scale"><button data-scale="enlarged">Enlarged bodies</button><button data-scale="true">True scale</button></div>
+        <div class="seg" role="group" aria-label="View"><button data-view="solar">Solar system</button><button data-view="earth">Earth close-up</button><button data-view="moon">Earth and Moon, live</button></div>
+        <div class="seg" role="group" aria-label="Scale"><button data-scale="enlarged">Enlarged</button><button data-scale="true">True scale</button></div>
       </div></header>
-    <div class="body"><div class="scope"><canvas></canvas><div class="legend"></div></div></div>
-    <div class="scopebar"><button class="btn" id="play">Play</button><input type="range" id="scrub" min="0" max="${F.length - 1}" value="${v.i}" aria-label="Simulated time">
-      <span class="year" id="yr"></span><select id="spd" class="input" style="width:auto" aria-label="Playback speed"><option value="1">10 years a step</option><option value="5" selected>50 years a step</option><option value="20">200 years a step</option></select></div></section>`;
-  const cv = $("canvas", body), ctx = cv.getContext("2d"), legend = $(".legend", body);
-  const C = {}; ["scope", "s-ink", "s-dim", "s-earth", "s-mars", "s-jupiter", "s-sun", "s-beam", "s-rock", "s-bad"].forEach(k => C[k] = css("--" + k));
+    <div class="body"><div class="scope"><canvas></canvas><div class="legend"></div><div class="key"></div></div></div>
+    <div class="scopebar"><button class="btn" id="play">Play</button><select id="epoch" class="input" style="width:auto" aria-label="Epoch" hidden></select>
+      <input type="range" id="scrub" min="0" value="0" aria-label="Time"><span class="year" id="yr"></span>
+      <select id="spd" class="input" style="width:auto" aria-label="Playback speed"></select></div></section>`;
+  const cv = $("canvas", body), ctx = cv.getContext("2d"), legend = $(".legend", body), keyBox = $(".key", body);
+  const C = {}; ["scope", "s-ink", "s-dim", "s-earth", "s-mars", "s-jupiter", "s-sun", "s-beam", "s-rock", "s-bad", "s-moon"].forEach(k => C[k] = css("--" + k));
   let W = 0, H = 0;
   const fit = () => { const r = cv.getBoundingClientRect(), d = Math.min(devicePixelRatio || 1, 2); cv.width = r.width * d; cv.height = r.height * d; ctx.setTransform(d, 0, 0, d, 0, 0); W = r.width; H = r.height; };
   const proj = (p, sc) => { const c = Math.cos(v.yaw), s = Math.sin(v.yaw), x = c * p[0] - s * p[1], y = s * p[0] + c * p[1]; return [W / 2 + x * sc, H / 2 - (y * Math.sin(v.pitch) + p[2] * Math.cos(v.pitch)) * sc]; };
-  const ring = (r, n = 128) => Array.from({ length: n + 1 }, (_, k) => [r * Math.cos(k / n * 2 * Math.PI), r * Math.sin(k / n * 2 * Math.PI), 0]);
+  const ring = (r, n = 128, c = [0, 0, 0]) => Array.from({ length: n + 1 }, (_, k) => [c[0] + r * Math.cos(k / n * 2 * Math.PI), c[1] + r * Math.sin(k / n * 2 * Math.PI), c[2]]);
   const line = (pts, sc, color, dash = [], alpha = 1, w = 1) => { ctx.save(); ctx.strokeStyle = color; ctx.globalAlpha = alpha; ctx.lineWidth = w; ctx.setLineDash(dash); ctx.beginPath(); pts.forEach((p, k) => { const [x, y] = proj(p, sc); k ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.stroke(); ctx.restore(); };
   const label = (s, x, y, color, align = "left") => { ctx.fillStyle = color; ctx.font = `12px ${css("--font")}`; ctx.textAlign = align; ctx.fillText(s, x, y); ctx.textAlign = "left"; };
-  const dot = (p, sc, rKmInUnits, color, name) => { const [x, y] = proj(p, sc), tr = rKmInUnits * sc, r = v.scale === "true" ? Math.max(tr, 0.8) : Math.max(tr, 5); ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); if (name) label(name, x + r + 6, y + 4, color); return r / tr; };
+  const dot = (p, sc, rView, color, name, minPx = 5) => { const [x, y] = proj(p, sc), tr = rView * sc, r = v.scale === "true" ? Math.max(tr, 0.8) : Math.max(tr, minPx); ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); if (name) label(name, x + r + 6, y + 4, color); return { k: r / tr, x, y, r }; };
+  const bar = (px, text) => { ctx.strokeStyle = C["s-dim"]; ctx.beginPath(); ctx.moveTo(16, H - 18); ctx.lineTo(16 + px, H - 18); ctx.stroke(); label(text, 24 + px, H - 14, C["s-dim"]); };
+  const meanMoon = (tYears, rKm) => { const a = MOON_L0 + 2 * Math.PI * tYears * 365.25 / MONTH_D; return [rKm * Math.cos(a), rKm * Math.sin(a), 0]; };
+  const E = () => live?.epochs?.[v.epoch];
+
+  function setupBar() {
+    const scrub = $("#scrub", body), spd = $("#spd", body), ep = $("#epoch", body);
+    if (v.view === "moon") {
+      ep.hidden = false; ep.innerHTML = live.epochs.map((e, k) => `<option value="${k}" ${k === v.epoch ? "selected" : ""}>Earth at ${e.earth_au} AU</option>`).join("");
+      scrub.max = E().frames.length - 1; v.j = Math.min(v.j, +scrub.max); scrub.value = v.j;
+      spd.innerHTML = `<option value="1">6 hours a step</option><option value="4" selected>1 day a step</option><option value="12">3 days a step</option>`;
+      $("#scopesub", body).textContent = "The Moon as a full body beside the live tow, one frame every 6 hours.";
+      $("#scopesub", body).title = live._path;
+    } else {
+      ep.hidden = true; scrub.max = F.length - 1; scrub.value = v.i;
+      spd.innerHTML = `<option value="1">10 years a step</option><option value="5" selected>50 years a step</option><option value="20">200 years a step</option>`;
+      $("#scopesub", body).textContent = "The journey's frames, one per 10 years. Its Moon is folded into Earth, so the Moon is drawn on its mean orbit; the live view shows the simulated Moon.";
+      $("#scopesub", body).title = "";
+    }
+  }
+
   function draw() {
-    const f = F[v.i]; $("#yr", body).textContent = year(f.t);
     ctx.fillStyle = C.scope; ctx.fillRect(0, 0, W, H);
     const k = [];
-    if (v.view === "solar") {
-      const sc = Math.min(W, H) / 2 * 0.92 / 4.2 * v.zoom;
-      line(ring(2.7), sc, C["s-earth"], [6, 5], 0.55); line(ring(3.64), sc, C["s-mars"], [6, 5], 0.55); line(ring(3.278), sc, C["s-dim"], [2, 4], 0.7);
-      line(ring(f.earth_orbit_au), sc, C["s-earth"], [], 0.3); line(ring(f.mars_orbit_au), sc, C["s-mars"], [], 0.3);
-      const a = proj([2.7 * 0.71, -2.7 * 0.71, 0], sc); label("Earth target 2.7 AU", a[0] + 6, a[1], C["s-earth"]);
-      const b = proj([3.64 * 0.71, -3.64 * 0.71, 0], sc); label("Mars parking 3.64 AU", b[0] + 6, b[1] + 12, C["s-mars"]);
-      const j = proj([-3.278 * 0.71, -3.278 * 0.71, 0], sc); label("Jupiter 2:1 resonance 3.28 AU", j[0] - 6, j[1], C["s-dim"], "right");
-      for (let n = Math.max(0, v.i - 40); n < v.i; n++) {
-        ctx.globalAlpha = 0.15 + 0.5 * (n - v.i + 40) / 40;
-        for (const [b2, c] of [["earth", C["s-earth"]], ["mars", C["s-mars"]], ["jupiter", C["s-jupiter"]]]) { const [x, y] = proj(F[n].pos[b2], sc); ctx.fillStyle = c; ctx.fillRect(x - 1, y - 1, 2, 2); }
-      }
-      ctx.globalAlpha = 1;
-      k.push(["Sun", dot([0, 0, 0], sc, R_KM.sun / AU_KM, C["s-sun"])]);
-      k.push(["Earth", dot(f.pos.earth, sc, R_KM.earth / AU_KM, C["s-earth"], "Earth")]);
-      k.push(["Mars", dot(f.pos.mars, sc, R_KM.mars / AU_KM, C["s-mars"], "Mars")]);
-      k.push(["Jupiter", dot(f.pos.jupiter, sc, R_KM.jupiter / AU_KM, C["s-jupiter"], "Jupiter")]);
-      bar(sc, "1 AU");
-    } else {
-      const E = f.pos.earth, A = f.pos.asteroid, rel = [0, 1, 2].map(q => (A[q] - E[q]) * AU_KM), rn = Math.hypot(...E), toSun = E.map(q => -q / rn);
+    let lines = [], keys = [];
+    if (v.view === "moon") {
+      const ep = E(), f = ep.frames[v.j];
+      const moon = f.slice(1, 4), ast = f.slice(4, 7), sun = f.slice(7, 10), P = f[10], inn = f.slice(11, 14), out = f.slice(14, 17), atLimit = f[17];
       const sc = Math.min(W, H) / 2 * 0.9 / 820000 * v.zoom;
-      line(ring(384400), sc, C["s-rock"], [], 0.45); line(ring(420000), sc, C["s-bad"], [5, 5], 0.65);
-      const t = proj([0, 384400, 0], sc); label("Moon's orbit", t[0], t[1] + 16, C["s-rock"], "center");
-      const t2 = proj([0, 420000, 0], sc); label("No beam inside 420,000 km", t2[0], t2[1] - 8, C["s-bad"], "center");
-      const sp = proj(toSun.map(q => q * 760000), sc), o = proj([0, 0, 0], sc);
+      line(ring(420000), sc, C["s-bad"], [5, 5], 0.6); const t2 = proj([0, 420000, 0], sc); label("No beam inside 420,000 km", t2[0], t2[1] - 8, C["s-bad"], "center");
+      const from = Math.max(0, v.j - Math.round(MONTH_D * 4)); // last month of the Moon's path
+      line(ep.frames.slice(from, v.j + 1).map(g => g.slice(1, 4)), sc, C["s-moon"], [], 0.55, 1.5);
+      const sp = proj(sun.map(q => q * 760000), sc), o = proj([0, 0, 0], sc);
       ctx.save(); ctx.strokeStyle = C["s-sun"]; ctx.globalAlpha = 0.35; ctx.beginPath(); ctx.moveTo(o[0], o[1]); ctx.lineTo(sp[0], sp[1]); ctx.stroke(); ctx.restore(); label("Towards the Sun", sp[0] + 6, sp[1], C["s-sun"]);
-      k.push(["Earth", dot([0, 0, 0], sc, R_KM.earth, C["s-earth"], "Earth")]);
-      const d = Math.hypot(...rel);
-      if (f.earth_tow_active && d < 3e6) {
-        line([rel.map((q, n) => q + toSun[n] * 900000), rel], sc, C["s-beam"], [], 0.9, 2);
-        k.push(["Asteroid", dot(rel, sc, R_KM.asteroid, C["s-rock"], `Tow asteroid, ${Math.round(d).toLocaleString("en-US")} km`)]);
-      } else label("The tow has finished and the asteroid has been sent away", W / 2, 28, C["s-bad"], "center");
+      if (P > 0) {
+        line([ast.map((q, n) => q - inn[n] * 1.2e6), ast], sc, C["s-beam"], [], 0.9, 2);
+        line([ast, ast.map((q, n) => q + out[n] * 1.2e6)], sc, C["s-beam"], [6, 4], 0.5, 1.5);
+      }
+      k.push(["Earth", dot([0, 0, 0], sc, R_KM.earth, C["s-earth"], "Earth").k]);
+      k.push(["Moon", dot(moon, sc, R_KM.moon, C["s-moon"], "Moon", 4).k]);
+      k.push(["Asteroid", dot(ast, sc, R_KM.asteroid, C["s-rock"], "Tow asteroid", 4).k]);
       bar(100000 * sc, "100,000 km");
+      const dm = Math.hypot(...moon), da = Math.hypot(...ast.map((q, n) => q - moon[n]));
+      $("#yr", body).textContent = `Day ${fix(f[0], 1)}`;
+      lines = [`<b>Day ${fix(f[0], 1)}</b> of the window, Earth at ${ep.earth_au} AU`, `Moon ${Math.round(dm).toLocaleString("en-US")} km from Earth`,
+        `Moon ${Math.round(da).toLocaleString("en-US")} km from the asteroid`, `Beam ${sci(P)} W${atLimit ? ` <span class="warn">at E1's limit</span>` : ""}`];
+      keys = [["s-earth", "Earth"], ["s-moon", "Moon and its last month"], ["s-rock", "Tow asteroid"], ["s-beam", "Light in (solid), bounced (dashed)"], ["s-bad", "Beam keep-out"]];
+    } else {
+      const f = F[v.i];
+      $("#yr", body).textContent = year(f.t);
+      if (v.view === "solar") {
+        const sc = Math.min(W, H) / 2 * 0.92 / 4.2 * v.zoom;
+        line(ring(2.7), sc, C["s-earth"], [6, 5], 0.55); line(ring(3.64), sc, C["s-mars"], [6, 5], 0.55); line(ring(3.278), sc, C["s-dim"], [2, 4], 0.7);
+        line(ring(f.earth_orbit_au), sc, C["s-earth"], [], 0.3); line(ring(f.mars_orbit_au), sc, C["s-mars"], [], 0.3);
+        const a = proj([2.7 * 0.71, -2.7 * 0.71, 0], sc); label("Earth target 2.7 AU", a[0] + 6, a[1], C["s-earth"]);
+        const b = proj([3.64 * 0.71, -3.64 * 0.71, 0], sc); label("Mars parking 3.64 AU", b[0] + 6, b[1] + 12, C["s-mars"]);
+        const j = proj([-3.278 * 0.71, -3.278 * 0.71, 0], sc); label("Jupiter 2:1 resonance 3.28 AU", j[0] - 6, j[1], C["s-dim"], "right");
+        for (let n = Math.max(0, v.i - 40); n < v.i; n++) {
+          ctx.globalAlpha = 0.15 + 0.5 * (n - v.i + 40) / 40;
+          for (const [b2, c] of [["earth", C["s-earth"]], ["mars", C["s-mars"]], ["jupiter", C["s-jupiter"]]]) { const [x, y] = proj(F[n].pos[b2], sc); ctx.fillStyle = c; ctx.fillRect(x - 1, y - 1, 2, 2); }
+        }
+        ctx.globalAlpha = 1;
+        k.push(["Sun", dot([0, 0, 0], sc, R_KM.sun / AU_KM, C["s-sun"]).k]);
+        const e = dot(f.pos.earth, sc, R_KM.earth / AU_KM, C["s-earth"], "Earth");
+        k.push(["Earth", e.k]);
+        // The Moon: its true distance is under a pixel here, so its orbit is drawn enlarged around Earth.
+        const trueSep = MOON_KM / AU_KM * sc, sep = v.scale === "true" ? trueSep : Math.max(trueSep, 22);
+        const mm = meanMoon(f.t, 1), mx = e.x + mm[0] * sep * Math.cos(v.yaw) - mm[1] * sep * Math.sin(v.yaw), my = e.y - (mm[0] * sep * Math.sin(v.yaw) + mm[1] * sep * Math.cos(v.yaw)) * Math.sin(v.pitch);
+        ctx.save(); ctx.strokeStyle = C["s-moon"]; ctx.globalAlpha = 0.5; ctx.beginPath(); ctx.ellipse(e.x, e.y, sep, sep * Math.sin(v.pitch), 0, 0, 7); ctx.stroke(); ctx.restore();
+        ctx.fillStyle = C["s-moon"]; ctx.beginPath(); ctx.arc(mx, my, v.scale === "true" ? 0.8 : 3, 0, 7); ctx.fill(); label("Moon", mx + 6, my - 10, C["s-moon"]);
+        k.push(["Moon's distance", sep / trueSep]);
+        k.push(["Mars", dot(f.pos.mars, sc, R_KM.mars / AU_KM, C["s-mars"], "Mars").k]);
+        k.push(["Jupiter", dot(f.pos.jupiter, sc, R_KM.jupiter / AU_KM, C["s-jupiter"], "Jupiter").k]);
+        bar(sc, "1 AU");
+        keys = [["s-earth", "Earth and its target"], ["s-moon", "Moon on its mean orbit"], ["s-mars", "Mars and its parking orbit"], ["s-jupiter", "Jupiter"]];
+      } else {
+        const Ea = f.pos.earth, A = f.pos.asteroid, rel = [0, 1, 2].map(q => (A[q] - Ea[q]) * AU_KM), rn = Math.hypot(...Ea), toSun = Ea.map(q => -q / rn);
+        const sc = Math.min(W, H) / 2 * 0.9 / 820000 * v.zoom;
+        line(ring(MOON_KM), sc, C["s-moon"], [3, 4], 0.5); line(ring(420000), sc, C["s-bad"], [5, 5], 0.65);
+        const t2 = proj([0, 420000, 0], sc); label("No beam inside 420,000 km", t2[0], t2[1] - 8, C["s-bad"], "center");
+        const sp = proj(toSun.map(q => q * 760000), sc), o = proj([0, 0, 0], sc);
+        ctx.save(); ctx.strokeStyle = C["s-sun"]; ctx.globalAlpha = 0.35; ctx.beginPath(); ctx.moveTo(o[0], o[1]); ctx.lineTo(sp[0], sp[1]); ctx.stroke(); ctx.restore(); label("Towards the Sun", sp[0] + 6, sp[1], C["s-sun"]);
+        k.push(["Earth", dot([0, 0, 0], sc, R_KM.earth, C["s-earth"], "Earth").k]);
+        k.push(["Moon", dot(meanMoon(f.t, MOON_KM), sc, R_KM.moon, C["s-moon"], "Moon (mean orbit)", 4).k]);
+        const d = Math.hypot(...rel);
+        if (f.earth_tow_active && d < 3e6) {
+          line([rel.map((q, n) => q + toSun[n] * 900000), rel], sc, C["s-beam"], [], 0.9, 2);
+          k.push(["Asteroid", dot(rel, sc, R_KM.asteroid, C["s-rock"], `Tow asteroid, ${Math.round(d).toLocaleString("en-US")} km`, 4).k]);
+        } else label("The tow has finished and the asteroid has been sent away", W / 2, 28, C["s-bad"], "center");
+        bar(100000 * sc, "100,000 km");
+        keys = [["s-earth", "Earth"], ["s-moon", "Moon on its mean orbit"], ["s-rock", "Tow asteroid"], ["s-beam", "Light from the Sun's side"], ["s-bad", "Beam keep-out"]];
+      }
+      lines = [`<b>${year(f.t)}</b>`, `Earth orbit ${fix(f.earth_orbit_au, 3)} AU`, `Mars orbit ${fix(f.mars_orbit_au, 3)} AU`];
     }
-    legend.innerHTML = `<b>${year(f.t)}</b><br>Earth orbit ${fix(f.earth_orbit_au, 3)} AU<br>Mars orbit ${fix(f.mars_orbit_au, 3)} AU<br><span class="dim">${
-      v.scale === "true" ? "True scale: bodies at real size, often under a pixel" : "Enlarged bodies: " + k.map(([n, x]) => `${n} ×${sci(x, 1)}`).join(", ")}</span>`;
+    lines.push(`<span class="dim">${v.scale === "true" ? "True scale: bodies at real size, often under a pixel" : "Enlarged: " + k.map(([n, x]) => `${n} ×${sci(x, 1)}`).join(", ")}</span>`);
+    legend.innerHTML = lines.join("<br>");
+    keyBox.innerHTML = keys.map(([c, t]) => `<span><i style="background:var(--${c})"></i>${t}</span>`).join("");
   }
-  function bar(px, text) { ctx.strokeStyle = C["s-dim"]; ctx.beginPath(); ctx.moveTo(16, H - 18); ctx.lineTo(16 + px, H - 18); ctx.stroke(); label(text, 24 + px, H - 14, C["s-dim"]); }
-  const setSeg = () => { body.querySelectorAll("[data-view]").forEach(b => b.setAttribute("aria-pressed", b.dataset.view === v.view)); body.querySelectorAll("[data-scale]").forEach(b => b.setAttribute("aria-pressed", b.dataset.scale === v.scale)); };
-  body.querySelectorAll("[data-view]").forEach(b => b.onclick = () => { v.view = b.dataset.view; v.zoom = 1; store.set("view", v.view); setSeg(); draw(); });
+  const setSeg = () => { body.querySelectorAll("[data-view]").forEach(b => { b.setAttribute("aria-pressed", b.dataset.view === v.view); if (b.dataset.view === "moon") b.disabled = !live; });
+    body.querySelectorAll("[data-scale]").forEach(b => b.setAttribute("aria-pressed", b.dataset.scale === v.scale)); };
+  body.querySelectorAll("[data-view]").forEach(b => b.onclick = () => { stop(); v.view = b.dataset.view; v.zoom = 1; v.yaw = 0; v.pitch = Math.PI / 2; store.set("view", v.view); setSeg(); setupBar(); draw(); });
   body.querySelectorAll("[data-scale]").forEach(b => b.onclick = () => { v.scale = b.dataset.scale; store.set("scale", v.scale); setSeg(); draw(); });
-  const scrub = $("#scrub", body); scrub.oninput = () => { v.i = +scrub.value; draw(); };
+  const scrub = $("#scrub", body);
+  scrub.oninput = () => { if (v.view === "moon") v.j = +scrub.value; else v.i = +scrub.value; draw(); };
+  $("#epoch", body).onchange = (e) => { v.epoch = +e.target.value; v.j = 0; setupBar(); draw(); };
   cv.onpointerdown = (ev) => { const x0 = ev.clientX, y0 = ev.clientY, a = v.yaw, p = v.pitch; cv.setPointerCapture(ev.pointerId);
     cv.onpointermove = (e) => { v.yaw = a + (e.clientX - x0) * 0.01; v.pitch = Math.min(Math.PI / 2, Math.max(0.05, p - (e.clientY - y0) * 0.01)); draw(); };
     cv.onpointerup = () => { cv.onpointermove = null; }; };
   cv.addEventListener("wheel", (e) => { e.preventDefault(); v.zoom = Math.min(20, Math.max(0.3, v.zoom * (e.deltaY < 0 ? 1.15 : 1 / 1.15))); draw(); }, { passive: false });
   let timer = null;
-  const stop = () => { v.playing = false; clearTimeout(timer); const b = $("#play", body); if (b) b.textContent = "Play"; };
+  function stop() { v.playing = false; clearTimeout(timer); const b = $("#play", body); if (b) b.textContent = "Play"; }
   $("#play", body).onclick = () => {
     if (v.playing) return stop();
-    v.playing = true; $("#play", body).textContent = "Pause"; if (v.i >= F.length - 1) v.i = 0;
-    const tick = () => { if (!v.playing) return; v.i = Math.min(F.length - 1, v.i + Number($("#spd", body).value)); scrub.value = v.i; draw(); if (v.i >= F.length - 1) return stop(); timer = setTimeout(tick, 100); };
+    v.playing = true; $("#play", body).textContent = "Pause";
+    const max = () => +scrub.max, get = () => (v.view === "moon" ? v.j : v.i), set = (x) => (v.view === "moon" ? (v.j = x) : (v.i = x));
+    if (get() >= max()) set(0);
+    const tick = () => { if (!v.playing) return; set(Math.min(max(), get() + Number($("#spd", body).value))); scrub.value = get(); draw(); if (get() >= max()) return stop(); timer = setTimeout(tick, 100); };
     tick();
   };
   const ro = new ResizeObserver(() => { fit(); draw(); }); ro.observe(cv);
-  setSeg();
+  setSeg(); setupBar();
   scopeStop = () => { stop(); ro.disconnect(); };
 }
 

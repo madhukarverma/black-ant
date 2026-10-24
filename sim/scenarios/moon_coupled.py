@@ -85,7 +85,10 @@ def build(cfg: dict, earth_au: float, moon_body: bool, asteroid: bool):
 
 
 def window(cfg: dict, earth_au: float, moon_body: bool, asteroid: bool, years: float, dt: float,
-           cap: float) -> dict:
+           cap: float, record: bool = False) -> dict:
+    """One window. With record=True, also saves frames for the viewer: every moon_coupled.frame_hours for the first
+    moon_coupled.frame_days, each [day, Moon - Earth (3, km), asteroid - Earth (3, km), unit vector Earth -> Sun (3),
+    beam power (W), light-in direction (3), light-out direction (3), 1 if the beam was at E1's limit else 0]."""
     system, tow = build(cfg, earth_au, moon_body, asteroid)
     m, pos, vel = system.m, system.pos, system.vel
     sun, earth = system.index("sun"), system.index("earth")
@@ -128,6 +131,11 @@ def window(cfg: dict, earth_au: float, moon_body: bool, asteroid: bool, years: f
     set_beam(acc)
     steps = round(years * YEAR / dt)
     capped_before = no_route_before = 0
+    mc = cfg["moon_coupled"]
+    frame_every = max(1, round(mc.get("frame_hours", 6) * 3600 / dt))
+    frame_until = mc.get("frame_days", 120) * DAY
+    frames = []
+    capped_seen = 0
     for n in range(1, steps + 1):
         kick(acc, dt / 2)
         pos += vel * dt
@@ -135,6 +143,15 @@ def window(cfg: dict, earth_au: float, moon_body: bool, asteroid: bool, years: f
         set_beam(acc)
         kick(acc, dt / 2)
         t = n * dt
+        if record and moon is not None and tow is not None and n % frame_every == 0 and t <= frame_until:
+            e, s_ = pos[earth], pos[sun] - pos[earth]
+            b = tow.beam
+            frames.append([round(t / DAY, 3), *[round(float(x) / 1e3) for x in pos[moon] - e],
+                           *[round(float(x) / 1e3) for x in pos[tow.asteroid] - e],
+                           *[round(float(x), 5) for x in s_ / np.linalg.norm(s_)], float(f"{b.power:.4g}"),
+                           *[round(x, 5) for x in b.incoming], *[round(x, 5) for x in b.outgoing],
+                           int(tow.capped_steps > capped_seen)])
+            capped_seen = tow.capped_steps
         if moon is not None:
             d = float(np.linalg.norm(pos[moon] - pos[earth])) / 1e3
             st["moon_closest_km"] = min(st["moon_closest_km"], d)
@@ -166,7 +183,10 @@ def window(cfg: dict, earth_au: float, moon_body: bool, asteroid: bool, years: f
     if moon is not None:
         v_rel, r_rel = vel[moon] - vel[earth], pos[moon] - pos[earth]
         st["moon_bound"] = bool(0.5 * float(v_rel @ v_rel) - G * (m[earth] + m[moon]) / float(np.linalg.norm(r_rel)) < 0)
-    return {k: (None if isinstance(v, float) and math.isinf(v) else v) for k, v in st.items()}
+    out = {k: (None if isinstance(v, float) and math.isinf(v) else v) for k, v in st.items()}
+    if record:
+        out["frames"] = frames
+    return out
 
 
 def run(cfg: dict | None = None, years: float | None = None, epochs=None, dt_hours: float | None = None) -> dict:
@@ -187,7 +207,8 @@ def run(cfg: dict | None = None, years: float | None = None, epochs=None, dt_hou
             au, src = middle_epoch_au(cfg)
         else:
             au, src = float(e), ("real J2000 start" if float(e) == 1.0 else "circular orbit")
-        body = window(cfg, au, True, True, years, dt, cap)
+        body = window(cfg, au, True, True, years, dt, cap, record=True)
+        frames = body.pop("frames")
         wanted = window(cfg, au, True, True, years, dt, math.inf)
         folded = window(cfg, au, False, True, years, dt, cap)
         free = window(cfg, au, True, False, years, dt, cap)
@@ -208,7 +229,11 @@ def run(cfg: dict | None = None, years: float | None = None, epochs=None, dt_hou
                               "beam_peak_increase_from_moon": wanted["beam_max_w"] / folded["beam_max_w"] - 1,
                               "share_of_time_at_e1_limit": body["capped_steps"] / steps_counted,
                               "spare_e1_power_at_peak_w": cap - wanted["beam_max_w"],
-                              "checks": checks, "all_pass": all(checks.values())})
+                              "checks": checks, "all_pass": all(checks.values()),
+                              "frame_columns": ["day", "moon_x_km", "moon_y_km", "moon_z_km", "asteroid_x_km", "asteroid_y_km",
+                                                "asteroid_z_km", "sun_x", "sun_y", "sun_z", "beam_w", "in_x", "in_y", "in_z",
+                                                "out_x", "out_y", "out_z", "at_e1_limit"],
+                              "frames": frames})
     out["all_pass"] = all(e["all_pass"] for e in out["epochs"])
     out["run_seconds"] = round(time.time() - started, 1)
     return out

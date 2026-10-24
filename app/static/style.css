@@ -10,7 +10,7 @@
   --c-earth:#2F7FD0; --c-mars:#C9562F; --c-beam:#B97D06; --c-ok:#1D7A4C; --c-grid:#E1E7EE; --c-axis:#77869A;
   /* the scope is always dark */
   --scope:#070A10; --s-ink:#C9D3E1; --s-dim:#7D8AA0; --s-earth:#5FB3FF; --s-mars:#E0754C; --s-jupiter:#C9A77A;
-  --s-sun:#FFD27A; --s-beam:#F2B84B; --s-rock:#C8CCD4; --s-bad:#FF6B6B;
+  --s-sun:#FFD27A; --s-beam:#F2B84B; --s-rock:#C8CCD4; --s-bad:#FF6B6B; --s-moon:#E9E4D4;
   --font:"Archivo", "Segoe UI", system-ui, sans-serif;
   --r:6px;
   color-scheme: light;
@@ -67,7 +67,9 @@ code{font-family:ui-monospace,"DejaVu Sans Mono",Menlo,monospace;font-size:.9em}
 .sheet{background:var(--sheet);border:1px solid var(--rule);border-radius:var(--r);min-width:0}
 .sheet > header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--rule-2)}
 .sheet > header h2{margin:0;font-size:15px;font-weight:600}
-.sheet > header p{margin:0;color:var(--ink-3);font-size:13px}
+.sheet > header p{margin:0;color:var(--ink-3);font-size:13px;max-width:52ch}
+.sheet > header .actions{flex-shrink:0}
+.seg button{white-space:nowrap}
 .sheet .body{padding:16px 18px}
 .sheet .body.flush{padding:0}
 .lede{margin:0;color:var(--ink-2);max-width:72ch}
@@ -139,13 +141,28 @@ pre.log{margin:0;padding:14px 18px;max-height:420px;overflow:auto;font:12.5px/1.
 /* ---------- scope (trajectory viewer) ---------- */
 .scope{background:var(--scope);border-radius:var(--r);overflow:hidden;position:relative;height:min(58vh,620px);min-height:320px}
 .scope canvas{display:block;width:100%;height:100%;cursor:grab}
-.scope .legend{position:absolute;left:14px;top:12px;color:var(--s-ink);font-size:12.5px;line-height:1.5;pointer-events:none}
+.scope .legend{position:absolute;left:14px;top:12px;max-width:56%;color:var(--s-ink);font-size:12.5px;line-height:1.5;pointer-events:none}
 .scope .legend b{font-weight:600}
 .scope .legend .dim{color:var(--s-dim)}
 .scopebar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 18px;border-top:1px solid var(--rule-2)}
 .scopebar input[type=range]{flex:1 1 240px;accent-color:var(--accent)}
 .scopebar .year{font-weight:600;min-width:10ch}
 canvas.chart{display:block;width:100%;height:200px}
+.scope .legend .warn{color:var(--s-beam)}
+.scope .key{position:absolute;right:14px;top:12px;display:flex;flex-direction:column;gap:4px;color:var(--s-ink);font-size:12px;pointer-events:none;text-align:right}
+.scope .key span{display:inline-flex;gap:8px;align-items:center;justify-content:flex-end}
+.scope .key i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.runlayout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;align-items:start}
+.runmain{min-width:0;display:flex;flex-direction:column;gap:20px}
+.runside{display:flex;flex-direction:column;gap:16px;position:sticky;top:76px}
+dl.sidefacts{margin:0}
+dl.sidefacts div{padding:11px 18px;border-bottom:1px solid var(--rule-2)}
+dl.sidefacts div:last-child{border-bottom:0}
+dl.sidefacts dt{font-size:12.5px;color:var(--ink-3)}
+dl.sidefacts dd{margin:2px 0 0;font-size:15.5px;font-weight:600;font-stretch:92%}
+dl.sidefacts dd small{display:block;font-size:12.5px;font-weight:400;color:var(--ink-3);font-stretch:100%}
+.sidelinks{display:flex;flex-direction:column;gap:6px}
+@media (max-width:1200px){ .runlayout{grid-template-columns:1fr} .runside{position:static} }
 
 @media (max-width:1100px){ .s8,.s7,.s6,.s5,.s4{grid-column:span 12} }
 @media (max-width:760px){
