@@ -74,7 +74,9 @@ arrival_trim:                  # sim/secular.py: Earth arrives with the orbit sh
   lift_step_deg: 0.15
   invariable_plane_deg: [1.5787, 107.5822]   # tilt and node to the J2000 ecliptic (Souami & Souchay 2012)
   s6_arcsec_per_year: -26.3302               # Jupiter-Saturn plane mode (Laskar 1990)
-  mars-tow: {from_au: 1.8, lift_max_deg: 0}   # Mars's tow trims the shape only, from 1.8 AU
+  # Mars's tow trims the shape only, between 1.8 and 3.1 AU. Steering on past 3.1 AU weakened its push just as
+  # it reached Jupiter's 2:1 resonance (3.28 AU), and the resonance caught it there (run of 24 Oct).
+  mars-tow: {from_au: 1.8, to_au: 3.1, lift_max_deg: 0}
 
 moon:                          # Member 1 runs these; Member 2 owns the verdict
   earth_mass_kg: 5.9722e24     # Earth alone (the long run gives Earth the Moon's mass too)

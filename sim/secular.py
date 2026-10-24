@@ -97,7 +97,9 @@ class Trim:
         ne = _pole(e, s)  # P = pole x, Q = -pole y
         dq, dp = tq + ne[1], tp - ne[0]
         self.free_tilt = math.degrees(math.hypot(dq, dp))
-        if a_e < self.cfg["from_au"] * AU:  # only the orbit on arrival matters: steer on the last stretch
+        # Steer only on the stretch set in config.yaml: the orbit on arrival is what matters, and Mars must cross
+        # Jupiter's 2:1 resonance at full push (a weakened push lets the resonance capture it).
+        if not self.cfg["from_au"] * AU <= a_e <= self.cfg.get("to_au", math.inf) * AU:
             want_b, want_l = (0.0, 0.0), (0.0, 0.0)
         else:
             beta = self.cfg["beta_max"] * min(1.0, self.free_e / self.cfg["full_strength_at_e"])

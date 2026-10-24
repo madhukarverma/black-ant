@@ -10,7 +10,7 @@ benchmarks passing, every force booked, no unresolved flags) are in [docs/proble
 A **gravity tractor held in place by light**. A 4 x 10^20 kg asteroid sits 637,100 km from Earth and
 pulls it gently with its own gravity; a focused light beam pushing on a mirror tethered to the asteroid
 keeps it from falling onto Earth. Earth's orbit widens a little on every lap and reaches 2.7 AU in about
-8,000 years. Mars is towed out of the way first (to 3.4 AU), sunlight mirrors keep Earth at today's
+8,500 years. Mars is towed out of the way first (to 3.64 AU), sunlight mirrors keep Earth at today's
 sunlight and temperature, and on the last stretch the tow steers Earth onto the orbit Jupiter lets it
 keep. Every push is booked with its reaction, so energy and momentum are checked all the way.
 

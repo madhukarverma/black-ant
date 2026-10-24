@@ -28,7 +28,7 @@ nothing touches Earth.
 | Earth's orbital speed | 29.8 km/s at 1 AU, 18.1 km/s at 2.7 AU |
 | Energy Earth's orbit must gain | about 1.7 x 10^33 J |
 | Pull on Earth | about 3.9 x 10^17 N (2.8 x 10^17 N of it along the orbit) |
-| Time | about 8,000 of the 10,000 years allowed |
+| Time | about 8,500 of the 10,000 years allowed |
 
 ## The physics we use
 
@@ -69,9 +69,21 @@ safety factor; the mirror is sized so it stays under 1,500 K. Earth tow: cables 
 
 Earth's path crosses Mars's orbit. Without help, Earth passes Mars at about 33,000 km
 (`--no-mars-tow`). A smaller tow (9.8 x 10^18 kg asteroid, 100,000 km from Mars, giving Mars the same
-pull) moves Mars from 1.52 AU out to **3.4 AU**, past Jupiter's 2:1 resonance at 3.28 AU. It crosses that
-resonance without being caught and parks around year 5,500. We first parked Mars at 3.1 AU; a
-million-year run showed Jupiter can throw it onto an Earth-crossing orbit from there (see below).
+pull) moves Mars from 1.52 AU out to **3.64 AU**, past Jupiter's 2:1 resonance at 3.28 AU.
+
+Where Mars parks matters, because once Earth sits at 2.7 AU, Earth's own resonances join Jupiter's:
+
+| Resonance (orbital periods) | With Jupiter, Mars at | With Earth at 2.7 AU, Mars at |
+| --- | --- | --- |
+| 2:1 | 3.278 AU | |
+| 7:5 | | 3.379 AU |
+| 11:6, 9:5, 7:4, 5:3 | 3.473, 3.516, 3.583, 3.701 AU | |
+| 3:2, 8:5 | | 3.538, 3.694 AU |
+
+3.64 AU sits between them all, with the widest gap from Earth's orbit (about 0.55 AU). Mars's tow also
+steers Mars's orbit shape onto the value Jupiter forces (the same arrival trim as Earth's, below), but only
+up to 3.1 AU: past that it must push at full strength, because a weakened push lets the 2:1 resonance catch
+Mars, which happened in one of our runs.
 
 ## The Moon comes along
 
@@ -137,8 +149,11 @@ None creates energy or momentum from nothing: every push is booked with its reac
 
 | Found | Fix | Re-tested |
 | --- | --- | --- |
-| Mars parked at 3.1 AU is thrown onto an Earth-crossing orbit within a million years (at 3.0 AU, out to 20 AU) | Park Mars at 3.4 AU, past Jupiter's 2:1 resonance | Stable for a million years; Earth's and Mars's orbits never cross |
-| A beam outage of 3 hours lost the Earth tow's asteroid, which then fell through the Moon's orbit | Shared E1 budget, structures sized for full power, E1 built from independent stations | Survives a 15-hour blackout, half the stations down for 1.25 days, a quarter for 2.8 days |
+| Mars parked at 3.1 AU is thrown onto an Earth-crossing orbit within a million years (at 3.0 AU, out to 20 AU) | Park Mars past Jupiter's 2:1 resonance | |
+| Mars parked at 3.4 AU, next to Earth's 7:5 resonance, drifts until its orbit crosses Earth's | Park Mars at 3.64 AU, between all the resonances, and trim its orbit shape | Parking scan: ten arrangements stable for a million years, orbits at least 0.26 AU apart |
+| Steering Mars past 3.1 AU slowed it at the 2:1 resonance, which caught it | Steer Mars only up to 3.1 AU | In the final run |
+| A beam outage of 3 hours lost the Earth tow's asteroid, which then fell through the Moon's orbit | Shared E1 budget, structures sized for full power, E1 built from independent stations | Earth tow survives a 15-hour blackout, half the stations down for 1.25 days, a quarter for 2.8 days; Mars tow 13 hours, 1.8 days, and indefinitely |
+| Vesta passes Earth at about 0.012 AU during the journey (our limit 0.02) | E1 nudges it fifty years ahead | About 0.3 hours of a 10^25 W beam |
 | Mars tow's cables and mirror too weak at its own power cap | Resized | Test at full power for both tows |
 | Earth's eccentricity drifts to 0.09 after arrival | Shape trim | Under 0.056 |
 | Earth's axial tilt swings 15 to 28 degrees | Plane trim onto the forced plane; mirrors for the rest | Swing about 4 degrees; about 1% of sunlight re-aimed |
