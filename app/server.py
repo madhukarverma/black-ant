@@ -38,33 +38,33 @@ ALLOWED_ROOTS = (ROOT / "results", ROOT / "out")
 
 # Each experiment is one command line. Parameters are checked against these limits before anything runs.
 EXPERIMENTS = [
-    {"id": "journey", "label": "Journey", "kind": "journey",
+    {"id": "journey", "label": "Journey", "kind": "journey", "summary": "Earth from 1 AU to 2.7 AU, Mars moved first",
      "question": "Tow Earth from 1 AU to 2.7 AU, Mars first. Does Earth arrive within 10,000 years, safely, with every force booked?",
      "module": "sim.scenarios.tow", "minutes": "1 min per ~700 simulated years without the belt",
      "params": [
-         {"key": "years", "label": "Simulated years", "type": "number", "default": 500, "min": 10, "max": 10000, "flag": "--years"},
-         {"key": "dt_days", "label": "Step (days)", "type": "number", "default": 1.0, "min": 0.25, "max": 2.0, "flag": "--dt-days"},
-         {"key": "mars_stop_au", "label": "Mars parks at (AU)", "type": "number", "default": 3.64, "min": 2.9, "max": 4.2, "flag": "--mars-stop-au"},
-         {"key": "orbits", "label": "Starting orbits", "type": "choice", "default": "real", "choices": ["real", "circular"], "flag": "--orbits"},
-         {"key": "no_mars_tow", "label": "Leave Mars where it is", "type": "bool", "default": False, "flag": "--no-mars-tow"},
-         {"key": "no_belt", "label": "Skip the asteroid-belt sample (faster)", "type": "bool", "default": True, "flag": "--no-belt"},
+         {"group": "Run length", "key": "years", "label": "Simulated years", "type": "number", "default": 500, "min": 10, "max": 10000, "flag": "--years"},
+         {"group": "Run length", "key": "dt_days", "label": "Step (days)", "type": "number", "default": 1.0, "min": 0.25, "max": 2.0, "flag": "--dt-days"},
+         {"group": "Design", "key": "mars_stop_au", "label": "Mars parks at (AU)", "type": "number", "default": 3.64, "min": 2.9, "max": 4.2, "flag": "--mars-stop-au"},
+         {"group": "Starting point", "key": "orbits", "label": "Starting orbits", "type": "choice", "default": "real", "choices": ["real", "circular"], "flag": "--orbits"},
+         {"group": "Design", "key": "no_mars_tow", "label": "Leave Mars where it is", "type": "bool", "default": False, "flag": "--no-mars-tow"},
+         {"group": "Checks", "key": "no_belt", "label": "Skip the asteroid-belt sample (faster)", "type": "bool", "default": True, "flag": "--no-belt"},
      ]},
-    {"id": "baseline", "label": "Baseline", "kind": "baseline",
+    {"id": "baseline", "label": "Baseline", "kind": "baseline", "summary": "Real solar system with the Moon, no push",
      "question": "Sun, planets, Earth and Moon from their real J2000 positions with no push. Do energy and momentum hold, and does the Moon behave?",
      "module": "sim.scenarios.baseline", "minutes": "about 15 s for 10 years",
      "params": [
-         {"key": "years", "label": "Simulated years", "type": "number", "default": 10, "min": 1, "max": 100, "flag": "--years"},
-         {"key": "bodies", "label": "Bodies", "type": "choice", "default": "planets", "choices": ["planets", "sem"], "flag": "--bodies"},
-         {"key": "dt_hours", "label": "Step (hours)", "type": "number", "default": 0.25, "min": 0.05, "max": 2.0, "flag": "--dt-hours"},
+         {"group": "Run length", "key": "years", "label": "Simulated years", "type": "number", "default": 10, "min": 1, "max": 100, "flag": "--years"},
+         {"group": "Bodies", "key": "bodies", "label": "Bodies", "type": "choice", "default": "planets", "choices": ["planets", "sem"], "flag": "--bodies"},
+         {"group": "Run length", "key": "dt_hours", "label": "Step (hours)", "type": "number", "default": 0.25, "min": 0.05, "max": 2.0, "flag": "--dt-hours"},
      ]},
-    {"id": "moon_coupled", "label": "Moon beside the tow", "kind": "moon_coupled",
+    {"id": "moon_coupled", "label": "Moon beside the tow", "kind": "moon_coupled", "summary": "Moon as a full body next to the live tow",
      "question": "The Moon as a full body next to the live tow. Does it stay with Earth, and how much extra beam power does its pull on the asteroid cost?",
      "module": "sim.scenarios.moon_coupled", "minutes": "about 45 s for 3-year windows",
      "params": [
-         {"key": "years", "label": "Years per window", "type": "number", "default": 1, "min": 0.1, "max": 10, "flag": "--years"},
-         {"key": "epochs", "label": "Earth orbit sizes (AU, or 'middle')", "type": "text", "default": "1.0 middle 2.7", "flag": "--epochs"},
+         {"group": "Run length", "key": "years", "label": "Years per window", "type": "number", "default": 1, "min": 0.1, "max": 10, "flag": "--years"},
+         {"group": "Where Earth is", "key": "epochs", "label": "Earth orbit sizes (AU, or 'middle')", "type": "text", "default": "1.0 middle 2.7", "flag": "--epochs"},
      ]},
-    {"id": "validation", "label": "Benchmarks", "kind": "validation",
+    {"id": "validation", "label": "Benchmarks", "kind": "validation", "summary": "Official benchmarks 1–10 and our tests",
      "question": "Run the official benchmarks 1-10 and our own tests (quick set). Which pass?",
      "module": "pytest", "minutes": "about 1 min", "params": []},
 ]
@@ -190,6 +190,17 @@ def frames_csv(run_dir: Path) -> str:
     return buf.getvalue()
 
 
+def finite(obj):
+    """Browsers cannot parse Infinity or NaN in JSON; saved runs may hold them (e.g. a flag never met). Send null."""
+    if isinstance(obj, float):
+        return obj if obj == obj and obj not in (float("inf"), float("-inf")) else None
+    if isinstance(obj, dict):
+        return {k: finite(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [finite(v) for v in obj]
+    return obj
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = "BlackAnt/1"
 
@@ -197,7 +208,7 @@ class Handler(BaseHTTPRequestHandler):
         pass
 
     def _send(self, code: int, body, ctype: str = "application/json", extra: dict | None = None):
-        data = body if isinstance(body, bytes) else (json.dumps(body) if ctype == "application/json" else body).encode("utf-8")
+        data = body if isinstance(body, bytes) else (json.dumps(finite(body), allow_nan=False) if ctype == "application/json" else body).encode("utf-8")
         self.send_response(code)
         self.send_header("Content-Type", ctype + ("; charset=utf-8" if ctype.startswith(("text", "application/json")) else ""))
         self.send_header("Content-Length", str(len(data)))

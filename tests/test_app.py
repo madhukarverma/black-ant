@@ -37,3 +37,8 @@ def test_pytest_summary_is_parsed():
                         "SKIPPED [1] tests/x.py:3: slow", "==== 1 passed, 1 failed in 0.1s ===="])
     assert [t["status"] for t in out["tests"]][:2] == ["PASSED", "FAILED"]
     assert "1 passed" in out["summary"]
+
+
+def test_non_finite_numbers_become_null_for_the_browser():
+    from app.server import finite
+    assert finite({"worst": float("inf"), "x": [1.0, float("nan")]}) == {"worst": None, "x": [1.0, None]}

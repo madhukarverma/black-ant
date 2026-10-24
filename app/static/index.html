@@ -3,65 +3,40 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Black Ant Test Bench</title>
+<title>Black Ant Workbench</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..700&display=swap">
 <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-<header class="top">
-  <h1>BLACK ANT <span>TEST BENCH</span></h1>
-  <span class="sub">Light-held gravity tractor · Earth 1 → 2.7 AU</span>
-  <span id="jobstate" class="chip">idle</span>
-</header>
-
-<main class="layout">
-  <!-- Left: experiments and saved runs -->
-  <section class="col left">
-    <h2>Experiments</h2>
-    <div id="experiments" class="stack"></div>
-    <h2>Saved journeys</h2>
-    <div id="runs" class="stack"></div>
-  </section>
-
-  <!-- Centre: the view -->
-  <section class="col centre">
-    <div class="toolbar">
-      <div class="seg" role="group" aria-label="View">
-        <button data-view="solar" class="on">Solar system</button>
-        <button data-view="earth">Earth close-up</button>
-      </div>
-      <div class="seg" role="group" aria-label="Visualisation scale">
-        <button data-scale="enlarged" class="on">Visualisation scale</button>
-        <button data-scale="true">True scale</button>
-      </div>
-      <span class="hint">drag to turn · wheel to zoom</span>
+<div class="shell">
+  <aside class="rail" aria-label="Main">
+    <div class="brand">
+      <span class="mark" aria-hidden="true"></span>
+      <div><strong>Black Ant</strong><span>Workbench</span></div>
     </div>
-    <div class="view"><canvas id="cv"></canvas><div id="viewnote" class="viewnote"></div></div>
-    <div class="timebar">
-      <button id="play" class="btn">Play</button>
-      <input id="scrub" type="range" min="0" max="0" value="0" aria-label="Simulated time">
-      <span id="year" class="mono">—</span>
-      <select id="speed" class="btn" aria-label="Playback speed">
-        <option value="1">10 yr per tick</option><option value="5" selected>50 yr per tick</option><option value="20">200 yr per tick</option>
-      </select>
-    </div>
-    <p class="note">Physics always uses true sizes. Positions are the saved frames (one per 10 simulated years), so planets jump between frames; rings show each orbit's size at that moment.</p>
-  </section>
-
-  <!-- Right: results -->
-  <section class="col right">
-    <nav class="tabs" id="tabs">
-      <button data-tab="summary" class="on">Summary</button>
-      <button data-tab="orbit">Orbit</button>
-      <button data-tab="ledger">Forces &amp; ledger</button>
-      <button data-tab="safety">Earth safety</button>
-      <button data-tab="moon">Moon</button>
-      <button data-tab="validation">Validation</button>
-      <button data-tab="compare">Compare &amp; export</button>
-      <button data-tab="log">Log</button>
+    <nav>
+      <p class="group">Mission</p>
+      <a href="#/overview" data-route="overview">Overview</a>
+      <p class="group">Work</p>
+      <a href="#/experiments" data-route="experiments">Experiments</a>
+      <a href="#/runs" data-route="runs">Runs</a>
+      <p class="group">Evidence</p>
+      <a href="#/validation" data-route="validation">Validation</a>
+      <a href="#/moon" data-route="moon">Moon and baseline</a>
+      <a href="#/compare" data-route="compare">Compare runs</a>
     </nav>
-    <div id="panel" class="panel"></div>
-  </section>
-</main>
+    <p class="railnote">Physics in <code>sim/</code>. This app starts the same runs you would type and reads what they save.</p>
+  </aside>
+
+  <div class="frame">
+    <header class="topbar">
+      <div class="crumbs" id="crumbs"></div>
+      <button id="jobpill" class="jobpill" data-state="idle" hidden></button>
+    </header>
+    <main id="main" class="main" tabindex="-1"></main>
+  </div>
+</div>
 <script src="/static/app.js"></script>
 </body>
 </html>
