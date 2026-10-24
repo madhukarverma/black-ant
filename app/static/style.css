@@ -1,0 +1,63 @@
+/* Black Ant test bench: a plain instrument console. Dark by design (space views); every colour is a token. */
+:root{
+  color-scheme: dark;
+  --void:#080b12; --panel:#0f141e; --panel-2:#151c29; --line:#243045;
+  --ink:#dbe3ef; --dim:#8b98ad; --beam:#f2b84b;
+  --earth:#5fb3ff; --mars:#e0754c; --jupiter:#c9a77a; --rock:#c8ccd4; --sun:#ffd27a;
+  --ok:#5ccf8f; --warn:#f0c04a; --bad:#ff6b6b;
+  --sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "DejaVu Sans Mono", Menlo, monospace;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--void);color:var(--ink);font:14px/1.45 var(--sans);padding:12px 16px}
+[hidden]{display:none!important}
+h1{font:600 20px/1 var(--mono);letter-spacing:.06em;margin:0}
+h1 span{color:var(--beam)}
+h2{font:500 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin:14px 0 8px}
+.top{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:10px}
+.sub{color:var(--dim);font-size:13px}
+.chip{font:11px var(--mono);padding:3px 8px;border:1px solid var(--line);border-radius:4px;color:var(--dim)}
+.chip.run{border-color:var(--beam);color:var(--beam)} .chip.ok{border-color:var(--ok);color:var(--ok)}
+.chip.bad{border-color:var(--bad);color:var(--bad)} .chip.warn{border-color:var(--warn);color:var(--warn)}
+.layout{display:grid;grid-template-columns:300px minmax(0,1fr) 440px;gap:14px;align-items:start}
+.col{min-width:0}
+.stack{display:flex;flex-direction:column;gap:8px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px;display:flex;flex-direction:column;gap:6px}
+.card.sel{border-color:var(--beam)}
+.card h3{margin:0;font-size:13.5px;font-weight:600;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.card p{margin:0;color:var(--dim);font-size:12.5px}
+.card .meta{font:11px var(--mono);color:var(--dim)}
+.btn,button{font:12px var(--mono);color:var(--ink);background:var(--panel-2);border:1px solid var(--line);border-radius:4px;padding:5px 10px;cursor:pointer}
+button:hover{border-color:var(--beam)} button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--beam);outline-offset:1px}
+button.primary{border-color:var(--beam);color:var(--beam)}
+button:disabled{opacity:.45;cursor:not-allowed}
+.form{display:grid;grid-template-columns:1fr 110px;gap:6px 8px;align-items:center;font-size:12.5px}
+.form input[type=number],.form input[type=text],.form select{width:100%;background:var(--void);color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:4px 6px;font:12px var(--mono)}
+.form .wide{grid-column:1/-1}
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.seg{display:inline-flex}
+.seg button{border-radius:0} .seg button:first-child{border-radius:4px 0 0 4px} .seg button:last-child{border-radius:0 4px 4px 0}
+.seg button.on,.tabs button.on{border-color:var(--beam);color:var(--beam);background:#1b2231}
+.hint{color:var(--dim);font-size:12px}
+.view{position:relative;border:1px solid var(--line);border-radius:6px;overflow:hidden;aspect-ratio:4/3;background:var(--void)}
+canvas{display:block;width:100%;height:100%;cursor:grab}
+.viewnote{position:absolute;right:10px;top:8px;text-align:right;font:11px var(--mono);color:var(--dim);pointer-events:none;white-space:pre}
+.timebar{display:flex;gap:10px;align-items:center;margin-top:8px}
+.timebar input{flex:1;accent-color:var(--beam)}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.note{color:var(--dim);font-size:12px;margin:8px 0 0}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px;min-height:300px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{text-align:left;padding:5px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--dim);font-weight:500}
+td.num{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pass{color:var(--ok)} .fail{color:var(--bad)} .skip{color:var(--dim)} .warnc{color:var(--warn)}
+pre.log{margin:0;max-height:520px;overflow:auto;font:11.5px/1.4 var(--mono);color:var(--ink);white-space:pre-wrap}
+.chart{width:100%;height:180px;display:block;margin:6px 0 14px}
+.empty{color:var(--dim)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0}
+a{color:var(--beam)}
+@media (max-width:1300px){.layout{grid-template-columns:280px minmax(0,1fr)} .right{grid-column:1/-1}}
+@media (max-width:800px){.layout{grid-template-columns:1fr}}

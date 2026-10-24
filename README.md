@@ -130,6 +130,17 @@ uv run python -m sim.scenarios.outage               # how long a beam can fail b
 Add `--no-mars-tow` to the journey to see why Mars must move first, or `--orbits circular` for flat
 circular starting orbits.
 
+## Test bench (web app)
+
+```bash
+uv run python -m app.server      # then open http://localhost:8765 in a browser
+```
+
+Pick an experiment on the left, set its inputs and press Run: the page starts the same command-line run you
+would type, shows its progress in the Log tab and opens the results when it finishes. Saved journeys (in `results/`
+and `out/`) can be opened, played back, compared and exported as CSV. Tabs: Summary, Orbit, Forces & ledger, Earth
+safety, Moon, Validation, Compare & export, Log. The physics stays in `sim/`; the app only reads what it saves.
+
 ## Test
 
 ```bash
@@ -169,6 +180,7 @@ uv run pytest -v -s                # everything, a few minutes
 | `tests/` | Benchmarks B1 to B9 and the checks |
 | `data/` | Raw JPL data: Horizons vectors and Small-Body Database orbits |
 | `sim-proto/` | The first JavaScript prototype, kept for quick experiments |
+| `app/` | The test bench: a local web app (`app/server.py`, standard library only) and its page (`app/static/`) |
 
 ## Model limits
 
