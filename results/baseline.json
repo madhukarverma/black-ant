@@ -1,0 +1,60 @@
+{
+  "settings": {
+    "bodies": [
+      "sun",
+      "venus",
+      "earth",
+      "mars",
+      "jupiter",
+      "saturn",
+      "uranus",
+      "neptune",
+      "moon"
+    ],
+    "years": 10,
+    "dt_hours": 0.25,
+    "start": "J2000.0; planets from JPL approximate elements, Moon offset from JPL Horizons (DE441)",
+    "push": "none"
+  },
+  "measured": {
+    "steps": 350640,
+    "energy_error_max": 2.3528512471671092e-11,
+    "momentum_error_max": 3.3891961895922704e-14,
+    "angular_momentum_error_max": 4.0223205724392676e-14,
+    "moon_closest_km": 356588.465760996,
+    "moon_farthest_km": 406709.35980196594,
+    "moon_mean_km": 385043.9393074292,
+    "moon_sidereal_month_days": 27.32835032309228,
+    "earth_moon_year_days": 365.26009258193267,
+    "moon_bound": true,
+    "hill_sphere_over_moon_distance_min": 3.6349872465234885
+  },
+  "reference": {
+    "moon_sidereal_month_days": 27.321661,
+    "earth_moon_year_days": 365.256363,
+    "moon_distance_range_km": [
+      356400,
+      406700
+    ]
+  },
+  "convergence": {
+    "years": 1,
+    "dt_hours": 0.25,
+    "earth_position_change_km": 8.006507463329836,
+    "moon_offset_change_km": 41.82037713196667,
+    "moon_offset_change_share": 0.00010411992380948793,
+    "estimated_error_km_at_h": {
+      "earth": 10.675343284439782,
+      "moon_offset": 55.76050284262223
+    }
+  },
+  "checks": {
+    "energy_constant": true,
+    "moon_bound": true,
+    "earth_moon_year_within_0.1_day": true,
+    "moon_month_within_0.1_day": true,
+    "converged_moon_offset_under_0.1pct": true
+  },
+  "all_pass": true,
+  "run_seconds": 7.0
+}

@@ -119,3 +119,26 @@ def orbit_elements(system: System, body: int, sun: int = 0) -> dict:
     h = np.cross(r_vec, v_vec)
     tilt = math.degrees(math.acos(max(-1.0, min(1.0, h[2] / float(np.linalg.norm(h))))))
     return {"a": a / AU, "e": float(np.linalg.norm(e_vec)), "i": tilt, "r": r / AU, "v": v2 ** 0.5}
+
+
+def split_earth_moon(system: System, moon: dict) -> int:
+    """Replace the Earth-Moon barycentre body ("earth", carrying the Moon's mass) by Earth and the Moon.
+
+    The Moon's offset from Earth comes from JPL Horizons at J2000.0 (config: moon.j2000_geocentric, AU and
+    AU/day, ecliptic of J2000). Earth and Moon sit on either side of the barycentre in the ratio of their
+    masses, so the pair's centre of mass, total mass and momentum are unchanged. Returns the Moon's index.
+    """
+    from .constants import DAY
+    earth = system.index("earth")
+    m_e, m_m = moon["earth_mass_kg"], moon["mass_kg"]
+    total = m_e + m_m
+    if abs(system.m[earth] - total) > 1e-6 * total:
+        raise ValueError(f"'earth' must carry the Moon's mass ({total:.6g} kg), not {system.m[earth]:.6g} kg")
+    g = moon["j2000_geocentric"]
+    rel_r = np.array(g["pos_au"], float) * AU
+    rel_v = np.array(g["vel_au_per_day"], float) * AU / DAY
+    bary_r, bary_v = system.pos[earth].copy(), system.vel[earth].copy()
+    system.m[earth] = m_e
+    system.pos[earth] = bary_r - (m_m / total) * rel_r
+    system.vel[earth] = bary_v - (m_m / total) * rel_v
+    return system.add("moon", m_m, bary_r + (m_e / total) * rel_r, bary_v + (m_e / total) * rel_v)

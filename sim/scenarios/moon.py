@@ -7,7 +7,9 @@ closest and farthest distances from Earth.
 The runs work in a frame that moves with Earth. Earth's own acceleration (from the Sun and the
 asteroid) is taken off, so the Moon feels only the difference between each body's pull on the
 Moon and its pull on Earth. That difference is computed exactly, not approximated.
-Model limits: flat orbits; Earth circles the Sun at a fixed distance during each 50-year run.
+Model limits: flat orbits; Earth circles the Sun at a fixed distance during each 50-year run; the asteroid is held
+exactly on its spot and does not feel the Moon. sim/scenarios/moon_coupled.py runs the Moon as a full body with the
+live tow instead.
 
 Run from the project root:
     uv run python -m sim.scenarios.moon
@@ -26,11 +28,15 @@ from ..constants import AU, DAY, G, GM_SUN, M_SUN, YEAR
 def epochs(cfg: dict) -> dict[str, tuple[float, float]]:
     """(year, Earth's orbit size in AU) at the start, middle and end of the journey.
 
-    Taken from out/run.json when a full run has been saved, otherwise from the steady-push formula.
+    Taken from the saved full journey (results/run.json, else out/run.json), otherwise from the steady-push
+    formula. A quick look (one that never got near the target) is skipped, so "end" really is the end.
     """
-    path = ROOT / "out" / "run.json"
-    if path.exists():
+    for path in (ROOT / "results" / "run.json", ROOT / "out" / "run.json"):
+        if not path.exists():
+            continue
         frames = [f for f in json.loads(path.read_text(encoding="utf-8"))["frames"] if f["earth_tow_active"]]
+        if not frames or frames[-1]["earth_orbit_au"] < 0.95 * cfg["tows"][0]["stop_au"]:
+            continue
         last = frames[-1]
         mid = min(frames, key=lambda f: abs(f["t"] - last["t"] / 2))
         return {"start": (0.0, frames[0]["earth_orbit_au"]), "middle": (mid["t"], mid["earth_orbit_au"]),

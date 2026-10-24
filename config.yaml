@@ -85,6 +85,24 @@ moon:                          # Member 1 runs these; Member 2 owns the verdict
   eccentricity: 0.0549
   years: 50                    # length of each run
   dt_minutes: 30
+  # The real Moon at J2000.0 (2000-01-01 12:00 TDB), seen from Earth's centre, ecliptic of J2000, from JPL Horizons
+  # (DE441): data/horizons_301_geocentric.txt. Used to split config's Earth-Moon barycentre into Earth and Moon.
+  j2000_geocentric:
+    pos_au: [-1.949281649686695e-03, -1.838126040073046e-03, 2.424579738820632e-04]
+    vel_au_per_day: [3.716704773167968e-04, -4.221785765308054e-04, -6.645539463989926e-06]
+
+baseline:                      # sim/scenarios/baseline.py: Sun, planets, Earth and Moon, real J2000 start, no push
+  years: 10
+  dt_hours: 0.25               # 2,600 steps per lunar month; at 1 h the Moon's place moved 0.17% when the step was halved
+  convergence_years: 1         # length of the h vs h/2 comparison
+  energy_error_max: 1.0e-9     # benchmark 5's tolerance
+
+moon_coupled:                  # sim/scenarios/moon_coupled.py: the Moon as a full body beside the live Earth tow
+  years: 3                     # each window
+  dt_hours: 0.5
+  settle_days: 30              # the controller's start-up wobble is not counted
+  epochs_au: [1.0, middle, 2.7]   # 1.0 starts from the real J2000 Earth and Moon; others put the Earth-Moon pair
+                               # on a circular orbit at that size with the Moon's real J2000 offset; middle = run.json
 
 beam:
   total_limit_w: 1.0e26        # enabler E1

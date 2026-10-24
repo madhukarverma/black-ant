@@ -119,34 +119,22 @@ def test_benchmark_5_solar_system_energy_5_years():
 
 
 def test_benchmark_6_earth_moon_barycentre_period():
-    """Official Benchmark 6: Earth-Moon barycentre period -> 365.256 days (tol 0.1 day)."""
+    """Official Benchmark 6: Earth-Moon barycentre period -> 365.256 days (tol 0.1 day).
+
+    Sun, Earth and the Moon as three separate bodies from their real J2000 states (Moon from JPL Horizons),
+    stepped with our own leapfrog; the year is the time the Earth-Moon barycentre takes to go once round the Sun."""
+    from sim.scenarios.baseline import build, integrate
     earth = next(p for p in CFG["planets"] if p["name"] == "earth")
-    system = real_planets([earth])
-    move_to_barycentre(system)
-
-    # Analytic Kepler period
     a = earth["a_au"] * AU
-    mu = G * (M_SUN + earth["mass_kg"])
-    period_kepler_days = (2 * math.pi * math.sqrt(a**3 / mu)) / DAY
+    period_kepler_days = 2 * math.pi * math.sqrt(a**3 / (G * (M_SUN + earth["mass_kg"]))) / DAY
 
-    # Simulated orbit period using leapfrog
-    dt = 0.01 * DAY
-    total_angle = 0.0
-    last_angle = math.atan2(system.pos[1, 1] - system.pos[0, 1], system.pos[1, 0] - system.pos[0, 0])
-    t = 0.0
-    while total_angle < 2 * math.pi:
-        leapfrog(system.m, system.pos, system.vel, dt, 1)
-        t += dt
-        curr = math.atan2(system.pos[1, 1] - system.pos[0, 1], system.pos[1, 0] - system.pos[0, 0])
-        da = (curr - last_angle + math.pi) % (2 * math.pi) - math.pi
-        total_angle += da
-        last_angle = curr
-    t_exact_days = ((t - dt) + dt * ((2 * math.pi - (total_angle - da)) / da)) / DAY
-
+    out = integrate(build(CFG, "sem"), 1.05, 0.25 * 3600)
     expected = 365.256
-    print(f"Benchmark 6: Kepler {period_kepler_days:.4f} d, simulated {t_exact_days:.4f} d (expected {expected} d)")
+    print(f"Benchmark 6: Kepler {period_kepler_days:.4f} d, simulated Earth-Moon barycentre {out['earth_moon_year_days']:.4f} d, "
+          f"Moon month {out['moon_sidereal_month_days']:.3f} d, Moon {out['moon_closest_km']:,.0f}-{out['moon_farthest_km']:,.0f} km")
     assert abs(period_kepler_days - expected) < 0.1
-    assert abs(t_exact_days - expected) < 0.1
+    assert abs(out["earth_moon_year_days"] - expected) < 0.1
+    assert out["moon_bound"]
 
 
 def test_benchmark_7_hohmann_transfer_mars():

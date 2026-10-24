@@ -1,0 +1,185 @@
+{
+  "settings": {
+    "years": 3,
+    "dt_hours": 0.5,
+    "earth_tow_power_available_w": 9.111973077957196e+25,
+    "cap_source": "E1 limit minus the Mars tow's peak in results/summary.json",
+    "model": "Sun, Earth, Moon, tow asteroid; live beam controller; no planets; plain 45-degree spot",
+    "limits": {
+      "moon_distance_change": 0.01,
+      "spot_error_share": 0.01
+    }
+  },
+  "epochs": [
+    {
+      "earth_au": 1.0,
+      "source": "real J2000 start",
+      "moon_body_with_tow": {
+        "beam_max_w": 9.111973077957196e+25,
+        "beam_min_w": 7.866597211022552e+25,
+        "capped_steps": 3896,
+        "no_route_steps": 0,
+        "spot_error_max_km": 644.2347322149297,
+        "moon_closest_km": 356859.96426616225,
+        "moon_farthest_km": 406680.27644971857,
+        "moon_to_asteroid_min_km": 231510.6049267462,
+        "moon_to_beam_min_km": 47222.28388939976,
+        "spot_error_max_share": 0.0010111987634828594,
+        "momentum_error": 1.2506766730658317e-14,
+        "moon_bound": true
+      },
+      "moon_folded_with_tow": {
+        "beam_max_w": 8.371665972283874e+25,
+        "beam_min_w": 8.355300978343245e+25,
+        "capped_steps": 0,
+        "no_route_steps": 0,
+        "spot_error_max_km": 16.9801421307274,
+        "moon_closest_km": null,
+        "moon_farthest_km": 0.0,
+        "moon_to_asteroid_min_km": null,
+        "moon_to_beam_min_km": null,
+        "spot_error_max_share": 2.6652240041951656e-05,
+        "momentum_error": 9.993403685702014e-15
+      },
+      "moon_body_no_tow": {
+        "beam_max_w": 0.0,
+        "beam_min_w": null,
+        "capped_steps": 0,
+        "no_route_steps": 0,
+        "spot_error_max_km": 0.0,
+        "moon_closest_km": 356886.1951387177,
+        "moon_farthest_km": 406709.2143515088,
+        "moon_to_asteroid_min_km": null,
+        "moon_to_beam_min_km": null,
+        "moon_bound": true
+      },
+      "moon_distance_change": 7.349926366662096e-05,
+      "beam_peak_wanted_w": 9.341425260611292e+25,
+      "beam_peak_increase_from_moon": 0.11583826821782006,
+      "share_of_time_at_e1_limit": 0.07615919931190868,
+      "spare_e1_power_at_peak_w": -2.2945218265409586e+24,
+      "checks": {
+        "moon_stays_bound": true,
+        "moon_distance_change_within_limit": true,
+        "asteroid_on_spot": true,
+        "beam_always_has_a_route": true,
+        "beam_misses_the_moon": true
+      },
+      "all_pass": true
+    },
+    {
+      "earth_au": 1.598,
+      "source": "results/run.json year 4270",
+      "moon_body_with_tow": {
+        "beam_max_w": 9.111973077957196e+25,
+        "beam_min_w": 7.865389340790564e+25,
+        "capped_steps": 3483,
+        "no_route_steps": 0,
+        "spot_error_max_km": 523.4161022931785,
+        "moon_closest_km": 357175.29779119324,
+        "moon_farthest_km": 406707.40401762066,
+        "moon_to_asteroid_min_km": 231683.568100386,
+        "moon_to_beam_min_km": 46292.94603668834,
+        "spot_error_max_share": 0.0008215603551925577,
+        "momentum_error": 1.0280389446729789e-14,
+        "moon_bound": true
+      },
+      "moon_folded_with_tow": {
+        "beam_max_w": 8.351598943887563e+25,
+        "beam_min_w": 8.351587043974572e+25,
+        "capped_steps": 0,
+        "no_route_steps": 0,
+        "spot_error_max_km": 1.531708571739893,
+        "moon_closest_km": null,
+        "moon_farthest_km": 0.0,
+        "moon_to_asteroid_min_km": null,
+        "moon_to_beam_min_km": null,
+        "spot_error_max_share": 2.404188623041741e-06,
+        "momentum_error": 5.92039114279803e-15
+      },
+      "moon_body_no_tow": {
+        "beam_max_w": 0.0,
+        "beam_min_w": null,
+        "capped_steps": 0,
+        "no_route_steps": 0,
+        "spot_error_max_km": 0.0,
+        "moon_closest_km": 357320.0435855091,
+        "moon_farthest_km": 406547.81933230726,
+        "moon_to_asteroid_min_km": null,
+        "moon_to_beam_min_km": null,
+        "moon_bound": true
+      },
+      "moon_distance_change": 0.0004050872513711168,
+      "beam_peak_wanted_w": 9.325980644319467e+25,
+      "beam_peak_increase_from_moon": 0.11667007802680018,
+      "share_of_time_at_e1_limit": 0.06808585503166784,
+      "spare_e1_power_at_peak_w": -2.1400756636227024e+24,
+      "checks": {
+        "moon_stays_bound": true,
+        "moon_distance_change_within_limit": true,
+        "asteroid_on_spot": true,
+        "beam_always_has_a_route": true,
+        "beam_misses_the_moon": true
+      },
+      "all_pass": true
+    },
+    {
+      "earth_au": 2.7,
+      "source": "circular orbit",
+      "moon_body_with_tow": {
+        "beam_max_w": 9.111973077957196e+25,
+        "beam_min_w": 7.870203401815852e+25,
+        "capped_steps": 4266,
+        "no_route_steps": 0,
+        "spot_error_max_km": 475.4440851805588,
+        "moon_closest_km": 357218.25898539723,
+        "moon_farthest_km": 406620.4252174244,
+        "moon_to_asteroid_min_km": 232918.33086403782,
+        "moon_to_beam_min_km": 42096.46400237299,
+        "spot_error_max_share": 0.0007462628868004376,
+        "momentum_error": 1.924073946690844e-14,
+        "moon_bound": true
+      },
+      "moon_folded_with_tow": {
+        "beam_max_w": 8.357060277134436e+25,
+        "beam_min_w": 8.357051503280009e+25,
+        "capped_steps": 0,
+        "no_route_steps": 0,
+        "spot_error_max_km": 0.3175800394305806,
+        "moon_closest_km": null,
+        "moon_farthest_km": 0.0,
+        "moon_to_asteroid_min_km": null,
+        "moon_to_beam_min_km": null,
+        "spot_error_max_share": 4.984775379541369e-07,
+        "momentum_error": 1.6622032551820396e-14
+      },
+      "moon_body_no_tow": {
+        "beam_max_w": 0.0,
+        "beam_min_w": null,
+        "capped_steps": 0,
+        "no_route_steps": 0,
+        "spot_error_max_km": 0.0,
+        "moon_closest_km": 357521.85541033384,
+        "moon_farthest_km": 406284.26599895244,
+        "moon_to_asteroid_min_km": null,
+        "moon_to_beam_min_km": null,
+        "moon_bound": true
+      },
+      "moon_distance_change": 0.0008491688559519872,
+      "beam_peak_wanted_w": 9.316873439395055e+25,
+      "beam_peak_increase_from_moon": 0.11485057310005797,
+      "share_of_time_at_e1_limit": 0.08339197748064743,
+      "spare_e1_power_at_peak_w": -2.0490036143785883e+24,
+      "checks": {
+        "moon_stays_bound": true,
+        "moon_distance_change_within_limit": true,
+        "asteroid_on_spot": true,
+        "beam_always_has_a_route": true,
+        "beam_misses_the_moon": true
+      },
+      "all_pass": true
+    }
+  ],
+  "all_pass": true,
+  "run_seconds": 17.5
+}

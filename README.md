@@ -1,3 +1,79 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Black Ant: towing Earth to 2.7 AU
 
 Our entry for **Black Ant Robotics** at TransfiNITTe 2026: a simulation of a machine that moves Earth
@@ -43,6 +119,8 @@ uv sync
 uv run python -m sim.scenarios.tow --out results    # the full journey with every check, about 35 minutes
 uv run python -m sim.scenarios.tow --no-belt --years 500   # a quick look
 uv run python -m sim.scenarios.moon                 # the Moon test at the start, middle and end, about 20 seconds
+uv run python -m sim.scenarios.baseline             # real Sun, planets, Earth and Moon from J2000, no push, 10 years, about 15 s
+uv run python -m sim.scenarios.moon_coupled         # the Moon as a full body beside the live tow, about 45 s
 uv run python -m sim.scenarios.longterm --only moved --state results/end_state.json --out results/longterm.json
                                                     # a million years after arrival, about 15 minutes
 uv run python -m sim.scenarios.parking              # where Earth and Mars can park, a million years each
@@ -87,7 +165,7 @@ uv run pytest -v -s                # everything, a few minutes
 | `sim/belt.py` | 1,000 test asteroids on real orbits: close passes and the impact estimate |
 | `sim/secular.py` | The arrival trim: steering Earth's orbit shape and plane |
 | `sim/spin.py` | Earth's spin axis, axial tilt and seasons |
-| `sim/scenarios/` | The journey, the Moon test, the million-year run, the parking scan, the outage test |
+| `sim/scenarios/` | The journey, the baseline, the Moon tests, the million-year run, the parking scan, the outage test |
 | `tests/` | Benchmarks B1 to B9 and the checks |
 | `data/` | Raw JPL data: Horizons vectors and Small-Body Database orbits |
 | `sim-proto/` | The first JavaScript prototype, kept for quick experiments |
@@ -97,5 +175,6 @@ uv run pytest -v -s                # everything, a few minutes
 Planets Venus to Neptune start on their real tilted, oval orbits at J2000.0 (1 January 2000, noon),
 from JPL's [orbital elements](https://ssd.jpl.nasa.gov/planets/approx_pos.html); Ceres, Pallas, Vesta
 and Hygiea from JPL Horizons. No Mercury (its pull on Earth is tiny and it would need much shorter steps).
-Earth carries the Moon's mass in the long runs; the Moon test follows the Moon itself. Our safety limits,
+Earth carries the Moon's mass in the long runs. The Moon is a full body, from its real J2000 position (JPL Horizons),
+in the baseline (`sim/scenarios/baseline.py`) and in short windows beside the live tow (`sim/scenarios/moon_coupled.py`). Our safety limits,
 structural rules and enabler limits are stand-ins until the organisers publish theirs.

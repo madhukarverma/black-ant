@@ -1,0 +1,41 @@
+API VERSION: 1.2
+API SOURCE: NASA/JPL Horizons API
+Request: https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND='301'&OBJ_DATA='NO'&EPHEM_TYPE='VECTORS'&CENTER='500@399'&START_TIME='2000-01-01 12:00'&STOP_TIME='2000-01-01 13:00'&STEP_SIZE='1 h'&REF_PLANE='ECLIPTIC'&REF_SYSTEM='J2000'&OUT_UNITS='AU-D'&VEC_TABLE='2'&TIME_TYPE='TDB'
+
+*******************************************************************************
+Ephemeris / API_USER Sat Oct 24 04:40:35 2026 Pasadena, USA      / Horizons
+*******************************************************************************
+Target body name: Moon (301)                      {source: DE441}
+Center body name: Earth (399)                     {source: DE441}
+Center-site name: BODY CENTER
+*******************************************************************************
+Start time      : A.D. 2000-Jan-01 12:00:00.0000 TDB
+Stop  time      : A.D. 2000-Jan-01 13:00:00.0000 TDB
+Step-size       : 60 minutes
+*******************************************************************************
+Center geodetic : 0.0, 0.0, 0.0                   {E-lon(deg),Lat(deg),Alt(km)}
+Center cylindric: 0.0, 0.0, 0.0                   {E-lon(deg),Dxy(km),Dz(km)}
+Center radii    : 6378.137, 6378.137, 6356.752 km {Equator_a, b, pole_c}
+Output units    : AU-D
+Calendar mode   : Mixed Julian/Gregorian
+Output type     : GEOMETRIC cartesian states
+Output format   : 2 (position and velocity)
+EOP file        : eop.261023.p270119
+EOP coverage    : DATA-BASED 1962-JAN-20 TO 2026-OCT-23. PREDICTS-> 2027-JAN-18
+Reference frame : Ecliptic of J2000.0
+*******************************************************************************
+JDTDB
+   X     Y     Z
+   VX    VY    VZ
+*******************************************************************************
+$$SOE
+2451545.000000000 = A.D. 2000-Jan-01 12:00:00.0000 TDB 
+ X =-1.949281649686695E-03 Y =-1.838126040073046E-03 Z = 2.424579738820632E-04
+ VX= 3.716704773167968E-04 VY=-4.221785765308054E-04 VZ=-6.645539463989926E-06
+2451545.041666667 = A.D. 2000-Jan-01 13:00:00.0000 TDB 
+ X =-1.933716675445027E-03 Y =-1.855643534190599E-03 Z = 2.421712913627048E-04
+ VX= 3.754427558730110E-04 VY=-4.186561072481024E-04 VZ=-7.115062429683397E-06
+$$EOE
+*******************************************************************************
+Geometric state vectors, no aberrations. 1 au = 149597870.700 km, 1 day = 86400.0 s.
+Frame: ecliptic and mean equinox of J2000.0 (X-axis ICRF; IAU76 obliquity 84381.448 arcsec).
