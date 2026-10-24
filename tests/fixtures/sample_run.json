@@ -1,0 +1,65 @@
+{
+  "meta": {
+    "scenario": "tow",
+    "frame_every_years": 10,
+    "distance_unit": "AU",
+    "mars_tow": true
+  },
+  "frames": [
+    {
+      "t": 0.0,
+      "pos": {
+        "earth": [-0.177171, 0.967214, -0.0],
+        "mars": [1.390668, -0.013391, -0.034461],
+        "jupiter": [3.998321, 2.945711, -0.101718],
+        "asteroid": [-0.180676, 0.969634, -0.0]
+      },
+      "earth_orbit_au": 1.0,
+      "earth_eccentricity": 0.01671,
+      "earth_pole": [0.0, 2.7e-07, 1.0],
+      "mars_orbit_au": 1.52371,
+      "beam_power_w": 9.249508830068159e+25,
+      "energy_error": 0.0,
+      "momentum_error": 0.0,
+      "earth_tow_active": true,
+      "flags": []
+    },
+    {
+      "t": 10.1,
+      "pos": {
+        "earth": [-0.813054, 0.562329, -1.1e-05],
+        "mars": [-1.197375, 1.14562, 0.053402],
+        "jupiter": [4.653714, -1.79905, -0.096673],
+        "asteroid": [-0.817242, 0.561565, -1.1e-05]
+      },
+      "earth_orbit_au": 1.001,
+      "earth_eccentricity": 0.01672,
+      "earth_pole": [1.88e-06, 2.159e-05, 1.0],
+      "mars_orbit_au": 1.52563,
+      "beam_power_w": 9.252792399399308e+25,
+      "energy_error": 8.428945106972581e-08,
+      "momentum_error": 5.311933989535658e-16,
+      "earth_tow_active": true,
+      "flags": []
+    },
+    {
+      "t": 50.0,
+      "pos": {
+        "earth": [0.379025, 0.915726, -0.000105],
+        "mars": [-1.661926, 0.088439, 0.042511],
+        "jupiter": [-2.688027, 4.519946, 0.041229],
+        "asteroid": [0.377395, 0.919658, -0.000105]
+      },
+      "earth_orbit_au": 1.00493,
+      "earth_eccentricity": 0.01665,
+      "earth_pole": [7.66e-06, 0.0001114, 0.99999999],
+      "mars_orbit_au": 1.53289,
+      "beam_power_w": 9.262558742026647e+25,
+      "energy_error": 1.438407604262046e-07,
+      "momentum_error": 4.15181918917725e-15,
+      "earth_tow_active": true,
+      "flags": []
+    }
+  ]
+}
+
